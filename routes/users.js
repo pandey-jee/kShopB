@@ -3,11 +3,19 @@ import {
   getUsers, 
   getUser, 
   updateUser, 
-  deleteUser 
+  deleteUser,
+  getUserProfile,
+  updateUserProfile,
+  getUserStats
 } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// User profile routes (protected)
+router.get('/profile', protect, getUserProfile);
+router.put('/profile', protect, updateUserProfile);
+router.get('/stats', protect, getUserStats);
 
 // Admin routes
 router.get('/', protect, admin, getUsers);

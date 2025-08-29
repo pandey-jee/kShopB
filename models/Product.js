@@ -97,6 +97,17 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  averageRating: {
+    type: Number,
+    default: 0,
+    min: [0, 'Average rating cannot be less than 0'],
+    max: [5, 'Average rating cannot be more than 5']
+  },
+  totalReviews: {
+    type: Number,
+    default: 0,
+    min: [0, 'Total reviews cannot be negative']
+  },
   weight: {
     type: Number,
     min: [0, 'Weight cannot be negative']

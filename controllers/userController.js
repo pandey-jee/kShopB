@@ -1,4 +1,121 @@
 import User from '../models/User.js';
+import Order from '../models/Order.js';
+
+// @desc    Get user profile
+// @route   GET /api/users/profile
+// @access  Private
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    console.error('Get user profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching profile'
+    });
+  }
+};
+
+// @desc    Update user profile
+// @route   PUT /api/users/profile
+// @access  Private
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { name, phone, dateOfBirth, gender, address, preferences } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update fields
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (dateOfBirth) user.dateOfBirth = dateOfBirth;
+    if (gender) user.gender = gender;
+    if (address) user.address = address;
+    if (preferences) user.preferences = preferences;
+
+    user.updatedAt = Date.now();
+
+    const updatedUser = await user.save();
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        dateOfBirth: updatedUser.dateOfBirth,
+        gender: updatedUser.gender,
+        address: updatedUser.address,
+        preferences: updatedUser.preferences,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Update user profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating profile'
+    });
+  }
+};
+
+// @desc    Get user statistics
+// @route   GET /api/users/stats
+// @access  Private
+export const getUserStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get order statistics
+    const orderStats = await Order.aggregate([
+      { $match: { user: userId } },
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: '$totalAmount' }
+        }
+      }
+    ]);
+
+    const stats = {
+      totalOrders: orderStats[0]?.totalOrders || 0,
+      totalSpent: orderStats[0]?.totalSpent || 0,
+      wishlistItems: 0, // TODO: Implement wishlist
+      reviewsGiven: 0   // TODO: Implement reviews
+    };
+
+    res.json(stats);
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching user statistics'
+    });
+  }
+};
 
 // @desc    Get all users
 // @route   GET /api/users

@@ -33,6 +33,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  dateOfBirth: {
+    type: Date
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other']
+  },
   address: {
     street: String,
     city: String,
@@ -41,6 +48,20 @@ const userSchema = new mongoose.Schema({
     country: {
       type: String,
       default: 'India'
+    }
+  },
+  preferences: {
+    newsletter: {
+      type: Boolean,
+      default: true
+    },
+    smsNotifications: {
+      type: Boolean,
+      default: true
+    },
+    orderUpdates: {
+      type: Boolean,
+      default: true
     }
   },
   avatar: {

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import User from './models/User.js';
 import Category from './models/Category.js';
+import { CATEGORY_IMAGES } from './utils/imageAssets.js';
 
 // Load environment variables
 dotenv.config();
@@ -40,42 +41,42 @@ const seedData = async () => {
     console.log('Email: admin@panditji.com');
     console.log('Password: admin123');
 
-    // Create some sample categories
+    // Create some sample categories with real automotive images
     const categories = [
       {
-        name: 'Horns & Sounds',
-        description: 'Various types of horns and sound systems for vehicles',
-        image: '/placeholder.svg',
+        name: 'Engine Parts',
+        description: 'Air filters, oil filters, spark plugs and engine components',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
         isActive: true
       },
       {
-        name: 'Auxiliary Lights',
-        description: 'LED bars, fog lights, work lights and spotlights',
-        image: '/placeholder.svg',
+        name: 'Electrical',
+        description: 'Headlights, tail lights, batteries and electrical components',
+        image: 'https://images.unsplash.com/photo-1544829099-b9a0c5303bea?w=400&h=400&fit=crop',
         isActive: true
       },
       {
-        name: 'Modifications',
-        description: 'Body kits, spoilers, side skirts and grilles',
-        image: '/placeholder.svg',
+        name: 'Suspension',
+        description: 'Shock absorbers, springs, struts and suspension parts',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
         isActive: true
       },
       {
         name: 'Accessories',
         description: 'Car covers, floor mats, seat covers and organizers',
-        image: '/placeholder.svg',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
         isActive: true
       },
       {
-        name: 'Wheels',
+        name: 'Tires & Wheels',
         description: 'Alloy wheels, steel wheels, wheel covers and tires',
-        image: '/placeholder.svg',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
         isActive: true
       },
       {
-        name: 'Switches',
-        description: 'Toggle switches, push buttons, rocker switches',
-        image: '/placeholder.svg',
+        name: 'Brake System',
+        description: 'Brake pads, brake discs, brake fluid and brake components',
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
         isActive: true
       }
     ];

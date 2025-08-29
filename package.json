@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@elastic/elasticsearch": "^9.1.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.0",
     "cors": "^2.8.5",
@@ -26,13 +27,18 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.2.1",
+    "framer-motion": "^12.23.12",
+    "fuse.js": "^7.1.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "natural": "^8.1.0",
+    "node-cron": "^4.2.1",
     "nodemailer": "^6.10.1",
     "razorpay": "^2.9.6",
+    "socket.io": "^4.8.1",
     "winston": "^3.17.0"
   },
   "devDependencies": {

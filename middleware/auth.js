@@ -1,46 +1,59 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { AppError, asyncHandler } from './enhancedErrorHandler.js';
+import { logger } from './errorHandler.js';
 
-export const protect = async (req, res, next) => {
+export const protect = asyncHandler(async (req, res, next) => {
   let token;
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+    // Get token from header
+    token = req.headers.authorization.split(' ')[1];
 
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get user from the token
-      req.user = await User.findById(decoded.id).select('-password');
+    // Get user from the token
+    req.user = await User.findById(decoded.id).select('-password');
 
-      next();
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized, token failed'
-      });
+    if (!req.user) {
+      logger.warn('Token valid but user not found', { userId: decoded.id });
+      return next(new AppError('User no longer exists', 401, 'USER_NOT_FOUND'));
     }
+
+    logger.info('User authenticated successfully', { 
+      userId: req.user._id, 
+      userEmail: req.user.email 
+    });
+
+    return next();
   }
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: 'Not authorized, no token'
+    logger.warn('Authentication attempted without token', { 
+      ip: req.ip, 
+      userAgent: req.get('User-Agent'),
+      url: req.originalUrl 
     });
+    return next(new AppError('Not authorized, no token provided', 401, 'NO_TOKEN'));
   }
-};
+});
 
 export const admin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
+    logger.info('Admin access granted', { 
+      userId: req.user._id, 
+      userEmail: req.user.email,
+      url: req.originalUrl 
+    });
     next();
   } else {
-    res.status(403).json({
-      success: false,
-      message: 'Not authorized as an admin'
+    logger.warn('Admin access denied', { 
+      userId: req.user?.id || 'unknown', 
+      userRole: req.user?.role || 'none',
+      url: req.originalUrl 
     });
+    next(new AppError('Not authorized as an admin', 403, 'ADMIN_ACCESS_DENIED'));
   }
 };
 

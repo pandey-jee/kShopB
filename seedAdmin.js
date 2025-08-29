@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import User from './models/User.js';
 import connectDB from './config/database.js';
+import { logger } from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -14,7 +15,7 @@ const seedAdmin = async () => {
     // Check if admin already exists
     const existingAdmin = await User.findOne({ email: 'admin@panditji.com' });
     if (existingAdmin) {
-      console.log('Admin user already exists');
+      logger.info('Admin user already exists');
       process.exit(0);
     }
 
@@ -38,13 +39,17 @@ const seedAdmin = async () => {
     });
 
     await adminUser.save();
-    console.log('Admin user created successfully!');
-    console.log('Email: admin@panditji.com');
-    console.log('Password: admin123');
+    logger.info('Admin user created successfully', {
+      email: 'admin@panditji.com',
+      name: 'Admin User'
+    });
     
     process.exit(0);
   } catch (error) {
-    console.error('Error creating admin user:', error);
+    logger.error('Error creating admin user', { 
+      error: error.message, 
+      stack: error.stack 
+    });
     process.exit(1);
   }
 };

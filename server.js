@@ -18,6 +18,10 @@ import paymentRoutes from './routes/payment.js';
 import settingsRoutes from './routes/settings.js';
 import wishlistRoutes from './routes/wishlist.js';
 import reviewRoutes from './routes/reviews.js';
+import searchRoutes from './routes/search.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
+import contactRoutes from './routes/contact.js';
+import { logger } from './middleware/errorHandler.js';
 
 // Load environment variables
 dotenv.config();
@@ -84,6 +88,9 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/admin/settings', settingsRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -113,7 +120,10 @@ app.use('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🌐 API URL: http://localhost:${PORT}/api`);
+  logger.info(`Server started successfully`, {
+    port: PORT,
+    environment: process.env.NODE_ENV,
+    apiUrl: `http://localhost:${PORT}/api`,
+    timestamp: new Date().toISOString()
+  });
 });

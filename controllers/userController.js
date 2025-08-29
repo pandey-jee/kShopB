@@ -1,5 +1,8 @@
 import User from '../models/User.js';
 import Order from '../models/Order.js';
+import Wishlist from '../models/Wishlist.js';
+import Review from '../models/Review.js';
+import { logger } from '../middleware/errorHandler.js';
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -100,16 +103,27 @@ export const getUserStats = async (req, res) => {
       }
     ]);
 
+    // Get wishlist count
+    const wishlistCount = await Wishlist.countDocuments({ user: userId });
+    
+    // Get reviews count  
+    const reviewsCount = await Review.countDocuments({ user: userId });
+
     const stats = {
       totalOrders: orderStats[0]?.totalOrders || 0,
       totalSpent: orderStats[0]?.totalSpent || 0,
-      wishlistItems: 0, // TODO: Implement wishlist
-      reviewsGiven: 0   // TODO: Implement reviews
+      wishlistItems: wishlistCount,
+      reviewsGiven: reviewsCount
     };
 
+    logger.debug('User stats retrieved', { userId, stats });
     res.json(stats);
   } catch (error) {
-    console.error('Get user stats error:', error);
+    logger.error('Get user stats error', { 
+      error: error.message, 
+      stack: error.stack,
+      userId 
+    });
     res.status(500).json({
       success: false,
       message: 'Server error while fetching user statistics'

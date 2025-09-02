@@ -18,12 +18,11 @@ const seedData = async () => {
     await User.deleteMany({ role: 'admin' });
     console.log('Cleared existing admin users');
 
-    // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 12);
+    // Create admin user - let the pre-save hook handle password hashing
     const adminUser = new User({
       name: 'Admin',
       email: 'admin@panditji.com',
-      password: adminPassword,
+      password: 'admin123', // Plain text password - will be hashed by pre-save hook
       role: 'admin',
       isVerified: true,
       phone: '9034667768',

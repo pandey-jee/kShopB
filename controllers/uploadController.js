@@ -20,55 +20,56 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-    // Upload to Cloudinary if configured, otherwise use local storage
-    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+    // Upload to Cloudinary if configured
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       try {
-        const result = await cloudinary.uploader.upload(req.file.path, {
-          folder: 'panditji-auto-connect/products',
-          transformation: [
-            { width: 800, height: 800, crop: 'limit' },
-            { quality: 'auto' }
-          ]
-        });
+        // Upload from buffer (memory storage)
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'panditji-auto-connect/products',
+            transformation: [
+              { width: 800, height: 800, crop: 'limit' },
+              { quality: 'auto' }
+            ],
+            resource_type: 'auto'
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              return res.status(500).json({
+                success: false,
+                message: 'Failed to upload image to Cloudinary'
+              });
+            }
 
-        res.json({
-          success: true,
-          message: 'Image uploaded successfully to Cloudinary',
-          data: {
-            url: result.secure_url,
-            public_id: result.public_id,
-            filename: req.file.filename,
-            originalName: req.file.originalname,
-            size: req.file.size
+            res.json({
+              success: true,
+              message: 'Image uploaded successfully to Cloudinary',
+              data: {
+                url: result.secure_url,
+                public_id: result.public_id,
+                filename: req.file.originalname,
+                originalName: req.file.originalname,
+                size: req.file.size
+              }
+            });
           }
-        });
+        );
+
+        // Upload the buffer
+        uploadStream.end(req.file.buffer);
       } catch (cloudinaryError) {
         console.error('Cloudinary upload error:', cloudinaryError);
-        // Fallback to local storage
-        const fileUrl = `/uploads/${req.file.filename}`;
-        res.json({
-          success: true,
-          message: 'Image uploaded successfully (local storage)',
-          data: {
-            url: fileUrl,
-            filename: req.file.filename,
-            originalName: req.file.originalname,
-            size: req.file.size
-          }
+        res.status(500).json({
+          success: false,
+          message: 'Failed to upload image to Cloudinary'
         });
       }
     } else {
-      // Local storage fallback
-      const fileUrl = `/uploads/${req.file.filename}`;
-      res.json({
-        success: true,
-        message: 'Image uploaded successfully (local storage)',
-        data: {
-          url: fileUrl,
-          filename: req.file.filename,
-          originalName: req.file.originalname,
-          size: req.file.size
-        }
+      // No Cloudinary configuration found
+      res.status(500).json({
+        success: false,
+        message: 'Cloudinary configuration missing'
       });
     }
   } catch (error) {
@@ -95,46 +96,50 @@ export const uploadMultipleImages = async (req, res) => {
     const uploadedFiles = [];
 
     // Upload to Cloudinary if configured
-    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY) {
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
       try {
-        for (const file of req.files) {
-          const result = await cloudinary.uploader.upload(file.path, {
-            folder: 'panditji-auto-connect/products',
-            transformation: [
-              { width: 800, height: 800, crop: 'limit' },
-              { quality: 'auto' }
-            ]
+        const uploadPromises = req.files.map(file => {
+          return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+              {
+                folder: 'panditji-auto-connect/products',
+                transformation: [
+                  { width: 800, height: 800, crop: 'limit' },
+                  { quality: 'auto' }
+                ],
+                resource_type: 'auto'
+              },
+              (error, result) => {
+                if (error) {
+                  reject(error);
+                } else {
+                  resolve({
+                    url: result.secure_url,
+                    public_id: result.public_id,
+                    filename: file.originalname,
+                    originalName: file.originalname,
+                    size: file.size
+                  });
+                }
+              }
+            );
+            uploadStream.end(file.buffer);
           });
+        });
 
-          uploadedFiles.push({
-            url: result.secure_url,
-            public_id: result.public_id,
-            filename: file.filename,
-            originalName: file.originalname,
-            size: file.size
-          });
-        }
+        const results = await Promise.all(uploadPromises);
+        uploadedFiles.push(...results);
       } catch (cloudinaryError) {
         console.error('Cloudinary upload error:', cloudinaryError);
-        // Fallback to local storage
-        req.files.forEach(file => {
-          uploadedFiles.push({
-            url: `/uploads/${file.filename}`,
-            filename: file.filename,
-            originalName: file.originalname,
-            size: file.size
-          });
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to upload images to Cloudinary'
         });
       }
     } else {
-      // Local storage fallback
-      req.files.forEach(file => {
-        uploadedFiles.push({
-          url: `/uploads/${file.filename}`,
-          filename: file.filename,
-          originalName: file.originalname,
-          size: file.size
-        });
+      return res.status(500).json({
+        success: false,
+        message: 'Cloudinary configuration missing'
       });
     }
 

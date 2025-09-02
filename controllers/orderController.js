@@ -39,7 +39,7 @@ export const createOrder = async (req, res) => {
         return {
           ...item,
           name: product.name,
-          image: product.images[0]?.url || '',
+          image: product.image || product.images?.[0]?.url || '/placeholder.svg',
           price: product.price
         };
       })
@@ -333,7 +333,7 @@ export const createCODOrder = async (req, res) => {
         return {
           product: item.product,
           name: product.name,
-          image: product.images[0]?.url || '',
+          image: product.image || product.images?.[0]?.url || '/placeholder.svg',
           price: product.price,
           quantity: item.quantity
         };

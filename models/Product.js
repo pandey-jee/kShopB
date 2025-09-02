@@ -31,6 +31,10 @@ const productSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'Brand name cannot be more than 50 characters']
   },
+  image: {
+    type: String,
+    default: '/placeholder.svg'
+  },
   images: [{
     url: {
       type: String,

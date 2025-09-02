@@ -1,18 +1,32 @@
 import path from 'path';
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Configure Cloudinary - moved to a function to ensure env vars are loaded
+const configureCloudinary = () => {
+  if (!cloudinary.config().cloud_name) {
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+  }
+};
 
 // @desc    Upload single image
 // @route   POST /api/upload/single
 // @access  Private
 export const uploadImage = async (req, res) => {
   try {
+    // Configure Cloudinary with current environment variables
+    configureCloudinary();
+    
+    console.log('Upload request received:', {
+      hasFile: !!req.file,
+      filename: req.file?.originalname,
+      size: req.file?.size,
+      mimetype: req.file?.mimetype
+    });
+    
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -22,6 +36,8 @@ export const uploadImage = async (req, res) => {
 
     // Upload to Cloudinary if configured
     if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      console.log('Cloudinary upload starting for:', req.file.originalname);
+      
       try {
         // Upload from buffer (memory storage)
         const uploadStream = cloudinary.uploader.upload_stream(
@@ -38,9 +54,15 @@ export const uploadImage = async (req, res) => {
               console.error('Cloudinary upload error:', error);
               return res.status(500).json({
                 success: false,
-                message: 'Failed to upload image to Cloudinary'
+                message: 'Failed to upload image to Cloudinary',
+                error: error.message
               });
             }
+
+            console.log('Cloudinary upload successful:', {
+              url: result.secure_url,
+              public_id: result.public_id
+            });
 
             res.json({
               success: true,
@@ -59,13 +81,20 @@ export const uploadImage = async (req, res) => {
         // Upload the buffer
         uploadStream.end(req.file.buffer);
       } catch (cloudinaryError) {
-        console.error('Cloudinary upload error:', cloudinaryError);
+        console.error('Cloudinary upload error (catch):', cloudinaryError);
         res.status(500).json({
           success: false,
-          message: 'Failed to upload image to Cloudinary'
+          message: 'Failed to upload image to Cloudinary',
+          error: cloudinaryError.message
         });
       }
     } else {
+      console.error('Cloudinary configuration missing:', {
+        cloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: !!process.env.CLOUDINARY_API_KEY,
+        apiSecret: !!process.env.CLOUDINARY_API_SECRET
+      });
+      
       // No Cloudinary configuration found
       res.status(500).json({
         success: false,
@@ -86,6 +115,9 @@ export const uploadImage = async (req, res) => {
 // @access  Private
 export const uploadMultipleImages = async (req, res) => {
   try {
+    // Configure Cloudinary with current environment variables
+    configureCloudinary();
+    
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,

@@ -19,8 +19,9 @@ const router = express.Router();
 // Order validation
 const orderValidation = [
   body('orderItems').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
-  body('shippingAddress.name').trim().notEmpty().withMessage('Shipping name is required'),
+  body('shippingAddress.fullName').trim().notEmpty().withMessage('Full name is required'),
   body('shippingAddress.phone').matches(/^\d{10}$/).withMessage('Please enter a valid 10-digit phone number'),
+  body('shippingAddress.email').isEmail().withMessage('Please enter a valid email address'),
   body('shippingAddress.street').trim().notEmpty().withMessage('Street address is required'),
   body('shippingAddress.city').trim().notEmpty().withMessage('City is required'),
   body('shippingAddress.state').trim().notEmpty().withMessage('State is required'),
@@ -32,8 +33,9 @@ const orderValidation = [
 // COD order validation
 const codOrderValidation = [
   body('items').isArray({ min: 1 }).withMessage('Order must contain at least one item'),
-  body('shippingAddress.name').trim().notEmpty().withMessage('Shipping name is required'),
+  body('shippingAddress.fullName').trim().notEmpty().withMessage('Full name is required'),
   body('shippingAddress.phone').matches(/^\d{10}$/).withMessage('Please enter a valid 10-digit phone number'),
+  body('shippingAddress.email').isEmail().withMessage('Please enter a valid email address'),
   body('shippingAddress.street').trim().notEmpty().withMessage('Street address is required'),
   body('shippingAddress.city').trim().notEmpty().withMessage('City is required'),
   body('shippingAddress.state').trim().notEmpty().withMessage('State is required'),

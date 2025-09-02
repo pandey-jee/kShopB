@@ -33,7 +33,15 @@ const orderSchema = new mongoose.Schema({
   shippingAddress: {
     name: {
       type: String,
-      required: true
+      required: false
+    },
+    fullName: {
+      type: String,
+      required: false
+    },
+    email: {
+      type: String,
+      required: false
     },
     phone: {
       type: String,
@@ -139,6 +147,25 @@ const orderSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
+});
+
+// Pre-save hook to ensure we have a name in shippingAddress
+orderSchema.pre('save', function(next) {
+  if (this.shippingAddress) {
+    // If fullName is provided but name is not, copy fullName to name
+    if (this.shippingAddress.fullName && !this.shippingAddress.name) {
+      this.shippingAddress.name = this.shippingAddress.fullName;
+    }
+    // If name is provided but fullName is not, copy name to fullName
+    if (this.shippingAddress.name && !this.shippingAddress.fullName) {
+      this.shippingAddress.fullName = this.shippingAddress.name;
+    }
+    // Ensure at least one name field is provided
+    if (!this.shippingAddress.name && !this.shippingAddress.fullName) {
+      return next(new Error('Shipping address must have a name or fullName'));
+    }
+  }
+  next();
 });
 
 export default mongoose.model('Order', orderSchema);
